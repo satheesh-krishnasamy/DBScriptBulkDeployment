@@ -9,6 +9,7 @@ using System.Diagnostics;
 using System.Drawing;
 using System.IO;
 using System.Linq;
+using System.Threading.Tasks;
 using System.Windows.Forms;
 
 namespace DBScriptRunner
@@ -16,6 +17,7 @@ namespace DBScriptRunner
     public partial class DBScriptRunner : Form
     {
         private Project prj = null;
+        private string DBConnectionString = "";
 
         public DBScriptRunner()
         {
@@ -40,6 +42,7 @@ namespace DBScriptRunner
             }
         }
 
+        private readonly List<GridViewDataModel> foundFileList = new List<GridViewDataModel>();
         private void FindMatchingFiles()
         {
             //var finalListOfMacthingFiles = new List<string>();
@@ -61,18 +64,28 @@ namespace DBScriptRunner
                 }
 
                 var files = Directory.GetFiles(cboScriptFolderPath.Text, $"{sqlFileNameToSearch}.sql");
+                //IList<GridViewDataModel> f = new List<GridViewDataModel>();
+                //foundFileList.Clear();
+                //dataGridView1.DataSource = null;
                 if (files != null && ((multipleFiles && files.Count() > 0) || files.Count() == 1))
                 {
+                    var fileNo = 1;
                     foreach (var foundFile in files)
                     {
                         lstFileMatches.Items.Add(foundFile);
+                        foundFileList.Add(
+                            new GridViewDataModel() { FileNo = fileNo++, FilePath = foundFile }
+                            );
                     }
                 }
                 else
                 {
                     lstFailures.Items.Add(sqlObjName);
                 }
+                //dataGridView1.DataSource = foundFileList;
             }
+
+
 
             if (lstFailures.Items.Count > 0)
             {
@@ -84,14 +97,101 @@ namespace DBScriptRunner
             }
         }
 
+        private void SwapFoundFile(int sourceIndex, int targetIndex)
+        {
+            var tempSource = foundFileList[sourceIndex];
+            foundFileList[sourceIndex] = foundFileList[targetIndex];
+            foundFileList[targetIndex] = tempSource;
+
+            ReBindDataGridView(targetIndex);
+        }
+
+        private void MoveUpFoundFiles()
+        {
+            if (stagedScriptFilesGridView.RowCount > 0
+                && stagedScriptFilesGridView.SelectedRows != null)
+            {
+                var index = stagedScriptFilesGridView.SelectedRows[0].Index;
+                if (index > 0 && index < stagedScriptFilesGridView.RowCount)
+                {
+                    SwapFoundFile(index, index - 1);
+                }
+            }
+        }
+
+        private void MoveDownFoundFiles()
+        {
+            if (stagedScriptFilesGridView.RowCount > 0
+                && stagedScriptFilesGridView.SelectedRows != null)
+            {
+                var index = stagedScriptFilesGridView.SelectedRows[0].Index;
+                if (index > -1 && index < stagedScriptFilesGridView.RowCount - 1)
+                {
+                    SwapFoundFile(index, index + 1);
+                }
+            }
+        }
+
+        private void ReBindDataGridView(int selectRowIndex = -1)
+        {
+            for (int i = 0; i < foundFileList.Count; i++)
+            {
+                foundFileList[i].FileNo = i + 1;
+            }
+
+            stagedScriptFilesGridView.DataSource = null;
+            stagedScriptFilesGridView.DataSource = foundFileList;
+
+            stagedScriptFilesGridView.Columns["FileFound"].Visible = false;
+            stagedScriptFilesGridView.Columns["FileNo"].AutoSizeMode = DataGridViewAutoSizeColumnMode.AllCells;
+            stagedScriptFilesGridView.Columns["FilePath"].AutoSizeMode = DataGridViewAutoSizeColumnMode.Fill;
+
+
+            if (selectRowIndex > -1 && selectRowIndex < stagedScriptFilesGridView.RowCount)
+            {
+                stagedScriptFilesGridView.Rows[selectRowIndex].Selected = true;
+            }
+        }
+
+        private void RemoveFoundFiles()
+        {
+            if (stagedScriptFilesGridView.RowCount > 0
+                && stagedScriptFilesGridView.SelectedRows != null)
+            {
+                var index = stagedScriptFilesGridView.SelectedRows[0].Index;
+                if (index > -1 && index < stagedScriptFilesGridView.RowCount)
+                {
+                    //var userHasConfirmedDelete = !this.ShowDeleteConfirmation;
+                    //if (this.ShowDeleteConfirmation)
+                    //{
+                    //    var deleteConfirmForm = new CustomDialogBox();
+                    //    deleteConfirmForm.lblMessage.Text = $"Are you sure to unstage this file?";
+                    //    deleteConfirmForm.Text = "Confirmation";
+                    //    deleteConfirmForm.btnNoCancel.Click += BtnNoCancel_Click;
+                    //    deleteConfirmForm.btnOKYes.Click += BtnOKYes_Click;
+                    //    deleteConfirmForm.chkOption1.Click += ChkOption1_Click;
+                    //    deleteConfirmForm.ShowDialog(this);
+                    //    userHasConfirmedDelete = this.deleteDialogResult;
+                    //}                    
+
+                    //if (userHasConfirmedDelete)
+                    if(!chkPromptOnDelete.Checked || DialogResult.Yes == MessageBox.Show($"Are you sure you want to unstage this file {foundFileList[index]}?", "Confirm unstage", MessageBoxButtons.YesNo, MessageBoxIcon.Question))
+                    {
+                        foundFileList.RemoveAt(index);
+                        ReBindDataGridView(index);
+                    }
+                }
+            }
+        }
+
         private void ValidateInput()
         {
-            if (string.IsNullOrWhiteSpace(lblConnectionString.Text))
+            if (string.IsNullOrWhiteSpace(this.DBConnectionString))
                 throw new Exception("Missing DB name");
             else
             {
                 DbConnectionStringBuilder csb = new DbConnectionStringBuilder();
-                csb.ConnectionString = lblConnectionString.Text; // throws
+                csb.ConnectionString = this.DBConnectionString; // throws
             }
             if (string.IsNullOrWhiteSpace(txtDBObjects.Text))
                 throw new Exception("Missing DB objects");
@@ -106,7 +206,7 @@ namespace DBScriptRunner
         {
             var data = new FormData()
             {
-                DBConnStr = lblConnectionString.Text,
+                DBConnStr = this.DBConnectionString,
                 DirectoryName = cboScriptFolderPath.Text,
                 SQLObjects = txtDBObjects.Text,
                 DBSelected = cboDatabases.Text,
@@ -177,7 +277,7 @@ namespace DBScriptRunner
                 if (objFormData == null)
                     return;
 
-                lblConnectionString.Text = objFormData.DBConnStr;
+                this.DBConnectionString = objFormData.DBConnStr;
                 cboScriptFolderPath.Text = objFormData.DirectoryName;
                 txtDBObjects.Text = objFormData.SQLObjects;
                 stageSectionSplitContainer.Panel2Collapsed = true;
@@ -286,7 +386,7 @@ namespace DBScriptRunner
                 {
                     cboDatabases.Items.Add(cboDatabases.Text);
                 }
-                lblConnectionString.Text = $"Integrated Security=SSPI;Persist Security Info=False;Initial Catalog={cboDatabases.Text};Data Source={cboDBServers.Text}";
+                this.DBConnectionString = $"Integrated Security=SSPI;Persist Security Info=False;Initial Catalog={cboDatabases.Text};Data Source={cboDBServers.Text}";
             }
         }
 
@@ -299,7 +399,7 @@ namespace DBScriptRunner
                     cboDBServers.Items.Add(cboDBServers.Text);
                 }
 
-                lblConnectionString.Text = $"Integrated Security=SSPI;Persist Security Info=False;Initial Catalog={cboDatabases.Text};Data Source={cboDBServers.Text}";
+                this.DBConnectionString = $"Integrated Security=SSPI;Persist Security Info=False;Initial Catalog={cboDatabases.Text};Data Source={cboDBServers.Text}";
             }
         }
 
@@ -406,22 +506,33 @@ namespace DBScriptRunner
                 return;
 
             mainTabControl.SelectTab(1);
-            string[] allFilesArray = new string[lstFileMatches.Items.Count];
             int i = 0;
+
             foreach (string file in lstFileMatches.Items)
             {
-                allFilesArray[i++] = file;
-                if (!lstStagedFiles.Items.Contains(file))
+                if (!foundFileList.Exists(p => p.FilePath.Equals(file, StringComparison.InvariantCultureIgnoreCase)))
                 {
-                    lstStagedFiles.Items.Add(file);
+                    foundFileList.Add(
+                        new GridViewDataModel()
+                        {
+                            FileNo = foundFileList.Count + 1,
+                            FilePath = file
+                        });
                 }
             }
 
-            btnRemoveStagedFile.Enabled = lstStagedFiles.Items.Count > 0;
+            stagedScriptFilesGridView.DataSource = null;
+            stagedScriptFilesGridView.DataSource = foundFileList;
+            stagedScriptFilesGridView.Columns["FileFound"].Visible = false;
+            stagedScriptFilesGridView.Columns["FileNo"].AutoSizeMode = DataGridViewAutoSizeColumnMode.AllCells;
+            stagedScriptFilesGridView.Columns["FilePath"].AutoSizeMode = DataGridViewAutoSizeColumnMode.Fill;
 
-            //PopulateTreeView(stagedFilesTreeView, new string[] { cboScriptFolderPath.Text + "\\" }, "", null);
+            //DataGridViewButtonColumn dtc = new DataGridViewButtonColumn();
+            //dtc.Name = "Actions";
+            //dtc.HeaderText = "Actions";
 
-            //PopulateTreeView(stagedFilesTreeView, allFilesArray, cboScriptFolderPath.Text + "\\", stagedFilesTreeView.Nodes[0]);
+
+
         }
 
         private static void PopulateTreeView(TreeView treeView, string[] paths, string pathSeparator, TreeNode initialParentNode)
@@ -521,6 +632,26 @@ namespace DBScriptRunner
             }
             else
             {
+                if (stagedScriptFilesGridView.RowCount < 1)
+                    return;
+                try
+                {
+                    DbConnectionStringBuilder csb = new DbConnectionStringBuilder();
+                    csb.ConnectionString = this.DBConnectionString;
+                }
+                catch
+                {
+                    MessageBox.Show("Please provide valid database server and database", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    return;
+                }
+
+
+
+                if (MessageBox.Show($"Are you sure to execute the {stagedScriptFilesGridView.RowCount} script(s)? {Environment.NewLine + Environment.NewLine} DB connection string : {this.DBConnectionString}.", "Confirmation", MessageBoxButtons.YesNo, MessageBoxIcon.Question) != DialogResult.Yes)
+                {
+                    return;
+                }
+
                 isRunning = true;
                 OnlyErrors = string.Empty;
                 AllMessages = string.Empty;
@@ -533,18 +664,37 @@ namespace DBScriptRunner
                 stageSectionSplitContainer.Panel2Collapsed = false;
 
                 var files = new List<string>();
-                foreach (string item in lstStagedFiles.Items)
+                foreach (var item in foundFileList)
                 {
-                    files.Add(item);
+                    files.Add(item.FilePath);
                 }
 
                 var scriptsToRun = new StagedScripts(
-                    lblConnectionString.Text,
+                    this.DBConnectionString,
                     files);
 
                 mainTabControl.SelectTab(1);
                 scriptExecutorBGWorker.RunWorkerAsync(scriptsToRun);
             }
+        }
+
+        private void ChkOption1_Click(object sender, EventArgs e)
+        {
+            this.ShowDeleteConfirmation = !((CheckBox)sender).Checked;
+        }
+
+        private void BtnOKYes_Click(object sender, EventArgs e)
+        {
+            this.deleteDialogResult = true;
+            ((Form)((Button)sender).Parent).Close();
+        }
+
+        private bool deleteDialogResult = false;
+        private bool ShowDeleteConfirmation = true;
+        private void BtnNoCancel_Click(object sender, EventArgs e)
+        {
+            deleteDialogResult = false;
+            ((Form)((Button)sender).Parent).Close();
         }
 
         private void btnRunScripts_Click_1(object sender, EventArgs e)
@@ -635,73 +785,6 @@ namespace DBScriptRunner
             chkShowOnlyErrorMessages.Visible = !string.IsNullOrWhiteSpace(OnlyErrors);
         }
 
-        private void lstStagedFiles_DragDrop(object sender, DragEventArgs e)
-        {
-            Point point = lstStagedFiles.PointToClient(new Point(e.X, e.Y));
-            int index = this.lstStagedFiles.IndexFromPoint(point);
-            if (index < 0)
-            {
-                index = this.lstStagedFiles.Items.Count - 1;
-            }
-            object data = e.Data.GetData(typeof(string));
-            this.lstStagedFiles.Items.Remove(data);
-            this.lstStagedFiles.Items.Insert(index, data);
-        }
-
-        private void lstStagedFiles_DragOver(object sender, DragEventArgs e)
-        {
-            e.Effect = DragDropEffects.Move;
-        }
-
-        private void lstStagedFiles_MouseDown(object sender, MouseEventArgs e)
-        {
-            if (e.Button == MouseButtons.Left)
-            {
-                if (this.lstStagedFiles.SelectedItem == null)
-                    return;
-                this.lstStagedFiles.DoDragDrop(this.lstStagedFiles.SelectedItem, DragDropEffects.Move);
-            }
-            else
-            {
-                Point clickedPoint = new Point(e.X, e.Y);
-                Point point = lstStagedFiles.PointToClient(clickedPoint);
-                int index = this.lstStagedFiles.IndexFromPoint(clickedPoint);
-                if (index > -1 && index < this.lstStagedFiles.Items.Count)
-                {
-                    //index = this.lstFileMatches.Items.Count - 1;
-                    fileToOpen = this.lstStagedFiles.Items[index].ToString();
-                }
-                else
-                    fileToOpen = string.Empty;
-
-                contextMenuStrip1.Show(lstStagedFiles, e.X, e.Y);
-            }
-        }
-
-        private void button1_Click_1(object sender, EventArgs e)
-        {
-            //if (lstStagedFiles.SelectedIndices != null)
-            //{
-            //    foreach (int index in lstStagedFiles.SelectedIndices)
-            //    {
-            //        var targetIndex = index - 1;
-
-            //        if (targetIndex < 0)
-            //            targetIndex = 0;
-
-            //        if (index > -1)
-            //        {
-            //            var itemToMoveUp = this.lstStagedFiles.Items[index].ToString();
-            //            var itemInTarget = this.lstStagedFiles.Items[targetIndex].ToString();
-            //            this.lstStagedFiles.Items.Remove(targetIndex);
-            //            this.lstStagedFiles.Items.Remove(index);
-
-            //            this.lstStagedFiles.Items.Insert(targetIndex, itemToMoveUp);
-            //            this.lstStagedFiles.Items.Insert(index + 1, itemInTarget);
-            //        }
-            //    }
-            //}
-        }
 
         private void saveProjectToolStripMenuItem_Click(object sender, EventArgs e)
         {
@@ -716,9 +799,9 @@ namespace DBScriptRunner
 
             prj.FormData = data;
             var files = new List<string>();
-            foreach (string item in lstStagedFiles.Items)
+            foreach (var item in foundFileList)
             {
-                prj.FileNames.Add(item);
+                prj.FileNames.Add(item.FilePath);
             }
 
             if (string.IsNullOrWhiteSpace(this.prj.ProjectFileName) || promptIfFileExists)
@@ -804,15 +887,112 @@ namespace DBScriptRunner
                     var deserializedObj = JsonConvert.DeserializeObject<Project>(fileContent);
                     TryLoadingForm(deserializedObj.FormData);
 
-                    lstStagedFiles.Items.Clear();
+                    foundFileList.Clear();
 
                     foreach (var stagedFile in deserializedObj.FileNames)
                     {
-                        lstStagedFiles.Items.Add(stagedFile);
+                        if (!string.IsNullOrWhiteSpace(stagedFile))
+                        {
+                            var fileExists = File.Exists(stagedFile);
+                            foundFileList.Add(
+                                    new GridViewDataModel()
+                                    {
+                                        FileNo = foundFileList.Count + 1,
+                                        FilePath = stagedFile,
+                                        FileFound = fileExists
+                                    });
+                        }
                     }
 
                     this.prj = deserializedObj;
+                    stagedScriptFilesGridView.DataSource = null;
+                    stagedScriptFilesGridView.DataSource = foundFileList;
+
+                    stagedScriptFilesGridView.Columns["FileFound"].Visible = false;
+                    stagedScriptFilesGridView.Columns["FileNo"].AutoSizeMode = DataGridViewAutoSizeColumnMode.AllCells;
+                    stagedScriptFilesGridView.Columns["FilePath"].AutoSizeMode = DataGridViewAutoSizeColumnMode.Fill;
+
                     mainTabControl.SelectTab(1);
+
+                    var missingFiles = new List<string>();
+                    if (missingFiles.Count > 0)
+                    {
+                        var response = MessageBox.Show($"There are {missingFiles.Count} files missing in your workspace. Do you like to provide the folders/files to this application?", "Provide files/folders", MessageBoxButtons.YesNo);
+                        if (response != DialogResult.Yes)
+                        {
+                            return;
+                        }
+
+
+                        IList<MissingFileTree> treeRoot = new List<MissingFileTree>();
+                        foreach (var missingFile in missingFiles)
+                        {
+                            var dirPathAlone = Path.GetDirectoryName(missingFile);
+                            var root = Directory.GetDirectoryRoot(dirPathAlone);
+                            var drive = treeRoot.FirstOrDefault(
+                                f => f.PathPartName.Equals(root,
+                                    StringComparison.InvariantCultureIgnoreCase));
+
+                            if (drive == null)
+                            {
+                                drive = new MissingFileTree() { PathPartName = root };
+                                treeRoot.Add(drive);
+                            }
+
+                            var subFolders = dirPathAlone
+                                .Replace(root, string.Empty)
+                                .Split(new char[] { Path.DirectorySeparatorChar }, StringSplitOptions.RemoveEmptyEntries);
+
+                            var startNode = drive;
+                            foreach (var subFolder in subFolders)
+                            {
+                                var existingChild = startNode
+                                    .ChildPath
+                                    .FirstOrDefault(
+                                        f => f.PathPartName.Equals(subFolder, StringComparison.InvariantCultureIgnoreCase));
+
+                                if (existingChild == null)
+                                {
+                                    var tempNode = new MissingFileTree() { PathPartName = subFolder };
+                                    startNode.ChildPath.Add(tempNode);
+                                    startNode = tempNode;
+                                }
+                                else
+                                {
+                                    startNode = existingChild;
+                                }
+                            }
+                        }
+
+                        var candidatePathsToGetInput = new List<string>();
+
+                        foreach (var root in treeRoot)
+                        {
+                            string tempPath = "";
+                            if (root.ChildPath.Count > 1)
+                            {
+                                if (!candidatePathsToGetInput
+                                    .Exists(p => p.Equals(root.PathPartName, StringComparison.InvariantCultureIgnoreCase)))
+                                {
+                                    candidatePathsToGetInput.Add(root.PathPartName);
+                                }
+                            }
+
+                            var tempPathNode = root;
+                            tempPath = root.PathPartName;
+
+                            foreach (var child in tempPathNode.ChildPath)
+                            {
+                                if (child.ChildPath.Count > 1)
+                                {
+
+                                }
+                            }
+                        }
+
+                    }
+
+
                 }
             }
 
@@ -821,30 +1001,6 @@ namespace DBScriptRunner
         private void closeExitToolStripMenuItem_Click(object sender, EventArgs e)
         {
             this.Close();
-        }
-
-        private void btnRemoveStagedFile_Click(object sender, EventArgs e)
-        {
-            HandleDeleteSelectedStagedFile();
-        }
-
-        private void lstStagedFiles_KeyUp(object sender, KeyEventArgs e)
-        {
-            if (e.KeyCode == Keys.Delete)
-            {
-                HandleDeleteSelectedStagedFile();
-            }
-        }
-
-        private void HandleDeleteSelectedStagedFile()
-        {
-            if (lstStagedFiles.SelectedItem != null
-                && lstStagedFiles.SelectedIndex > -1
-                && lstStagedFiles.SelectedIndex < lstStagedFiles.Items.Count)
-            {
-                lstStagedFiles.Items.Remove(lstStagedFiles.SelectedItem);
-            }
-            btnRemoveStagedFile.Enabled = lstStagedFiles.Items.Count > 0;
         }
 
         private void runToolStripMenuItem1_Click(object sender, EventArgs e)
@@ -997,6 +1153,169 @@ namespace DBScriptRunner
             {
                 rtbExecutionSummaryMessage.Text = AllMessages;
             }
+        }
+
+        private void dataGridView1_MouseDown(object sender, MouseEventArgs e)
+        {
+            if (e.Button == MouseButtons.Left)
+            {
+                if (this.stagedScriptFilesGridView.SelectedRows == null
+                        || this.stagedScriptFilesGridView.SelectedRows.Count < 1)
+                    return;
+
+                Point point = stagedScriptFilesGridView.PointToClient(new Point(e.X, e.Y));
+                // target row
+                DataGridView.HitTestInfo info = stagedScriptFilesGridView.HitTest(point.X, point.Y);
+                var alreadyHandled = false;
+
+                var currrow = stagedScriptFilesGridView.CurrentRow;
+
+                if (info != null
+                && info.RowIndex > -1
+                && info.RowIndex < stagedScriptFilesGridView.RowCount
+                && info.ColumnIndex > -1)
+                {
+                    if (info.ColumnIndex == 3)
+                    {
+                        alreadyHandled = true;
+                        MessageBox.Show("hello");
+                    }
+                }
+
+                if (!alreadyHandled)
+                {
+                    this.stagedScriptFilesGridView.DoDragDrop(this.stagedScriptFilesGridView.SelectedRows[0], DragDropEffects.Move);
+                }
+            }
+            else
+            {
+                //Point point = dataGridView1.PointToClient(new Point(e.X, e.Y));
+                //// target row
+                //DataGridView.HitTestInfo info = dataGridView1.HitTest(point.X, point.Y);
+                ////var fileSet = false;
+
+                //if (info != null
+                //&& info.RowIndex > -1
+                //&& info.RowIndex < dataGridView1.RowCount
+                //&& info.ColumnIndex > -1)
+                //{
+                //    var targetFilePath = dataGridView1.Rows[info.RowIndex].Cells[info.ColumnIndex];
+                //    if (targetFilePath != null)
+                //    {
+                //        fileSet = true;
+                //        fileToOpen = (targetFilePath.Value ?? "").ToString();
+                //    }
+                //}
+
+                //if (!fileSet)
+                //{
+
+                if (this.stagedScriptFilesGridView.SelectedRows == null
+                || this.stagedScriptFilesGridView.SelectedRows.Count < 1)
+                {
+                    fileToOpen = string.Empty;
+                }
+                else
+                {
+                    fileToOpen = foundFileList[stagedScriptFilesGridView.SelectedRows[0].Index].FilePath;
+                }
+                //}
+            }
+        }
+
+        private void dataGridView1_DragOver(object sender, DragEventArgs e)
+        {
+            e.Effect = DragDropEffects.Move;
+        }
+
+        private void dataGridView1_DragDrop(object sender, DragEventArgs e)
+        {
+            Point point = stagedScriptFilesGridView.PointToClient(new Point(e.X, e.Y));
+
+            // target row
+            DataGridView.HitTestInfo info = stagedScriptFilesGridView.HitTest(point.X, point.Y);
+
+            if (e.Data.GetDataPresent(typeof(DataGridViewRow))
+                && info != null
+                && info.RowIndex > -1
+                && info.ColumnIndex > -1)
+            {
+                var sourceRow = (DataGridViewRow)(e.Data.GetData(typeof(DataGridViewRow)));
+                var targetFilePath = stagedScriptFilesGridView.Rows[info.RowIndex].Cells[info.ColumnIndex].Value;
+
+                var sourceFile = foundFileList[sourceRow.Index];
+                var targetFile = foundFileList[info.RowIndex];
+                foundFileList.Insert(info.RowIndex, sourceFile);
+
+                if (sourceRow.Index < info.RowIndex)
+                    foundFileList.RemoveAt(sourceRow.Index);
+                else
+                    foundFileList.RemoveAt(sourceRow.Index + 1);
+
+                for (int i = 0; i < foundFileList.Count; i++)
+                {
+                    foundFileList[i].FileNo = i + 1;
+                }
+
+                //dataGridView1.Rows.Clear();
+                //dataGridView1.DataSource = foundFileList;
+                var prevRowCellColor = stagedScriptFilesGridView.Rows[info.RowIndex].Cells[info.ColumnIndex].Style.BackColor;
+                stagedScriptFilesGridView.Rows[info.RowIndex].Cells[info.ColumnIndex].Style.BackColor = Color.Green;
+                Task.Delay(500).ConfigureAwait(false).GetAwaiter().GetResult();
+                stagedScriptFilesGridView.Rows[info.RowIndex].Cells[info.ColumnIndex].Style.BackColor = prevRowCellColor;
+
+                //var targetRowPrevColor = dataGridView1.Rows[info.RowIndex].Cells[info.ColumnIndex].Style.BackColor;
+                //var sourcePrevColor = sourceRow.Cells[info.ColumnIndex].Style.BackColor;
+                //dataGridView1.Rows[info.RowIndex].Cells[info.ColumnIndex].Style.BackColor = Color.Green;
+                //sourceRow.Cells[info.ColumnIndex].Style.BackColor = Color.OrangeRed;
+
+                //Task.Delay(500).ConfigureAwait(false).GetAwaiter().GetResult();
+
+                //dataGridView1.Rows[info.RowIndex].Cells[info.ColumnIndex].Value = sourceRow.Cells[info.ColumnIndex].Value;
+                //sourceRow.Cells[info.ColumnIndex].Value = targetFilePath;
+
+                //dataGridView1.Rows[info.RowIndex].Cells[info.ColumnIndex].Style.BackColor = Color.OrangeRed;
+                //sourceRow.Cells[info.ColumnIndex].Style.BackColor = Color.Green;
+                //Task.Delay(1000).ConfigureAwait(false).GetAwaiter().GetResult();
+                //dataGridView1.Rows[info.RowIndex].Cells[info.ColumnIndex].Style.BackColor = targetRowPrevColor;
+                //sourceRow.Cells[info.ColumnIndex].Style.BackColor = sourcePrevColor;
+
+            }
+        }
+
+        private void mainTabControl_TabIndexChanged(object sender, EventArgs e)
+        {
+            stageToolStripMenuItem.Visible = mainTabControl.SelectedTab.Text == "Stage";
+        }
+
+        private void mainTabControl_SelectedIndexChanged(object sender, EventArgs e)
+        {
+            stageToolStripMenuItem.Visible = mainTabControl.SelectedTab.Text == "Stage";
+        }
+
+        private void moveDownToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            MoveDownFoundFiles();
+        }
+
+        private void moveUpToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            MoveUpFoundFiles();
+        }
+
+        private void deleteFileToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            RemoveFoundFiles();
+        }
+
+        private void dataGridView1_CellContentClick(object sender, DataGridViewCellEventArgs e)
+        {
+
+        }
+
+        private void dataGridView1_MouseUp(object sender, MouseEventArgs e)
+        {
+
         }
     }
 }

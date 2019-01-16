@@ -30,7 +30,6 @@
         {
             this.components = new System.ComponentModel.Container();
             this.btnFindFiles = new System.Windows.Forms.Button();
-            this.label1 = new System.Windows.Forms.Label();
             this.txtDBObjects = new System.Windows.Forms.TextBox();
             this.lblFolderName = new System.Windows.Forms.Label();
             this.label2 = new System.Windows.Forms.Label();
@@ -47,11 +46,6 @@
             this.tabSearch = new System.Windows.Forms.TabPage();
             this.scAllContentHolder = new System.Windows.Forms.SplitContainer();
             this.cboScriptFolderPath = new System.Windows.Forms.ComboBox();
-            this.label6 = new System.Windows.Forms.Label();
-            this.label5 = new System.Windows.Forms.Label();
-            this.cboDBServers = new System.Windows.Forms.ComboBox();
-            this.cboDatabases = new System.Windows.Forms.ComboBox();
-            this.lblConnectionString = new System.Windows.Forms.Label();
             this.splitContainer2 = new System.Windows.Forms.SplitContainer();
             this.panel1 = new System.Windows.Forms.Panel();
             this.sqlFilePatternGroupBox = new System.Windows.Forms.GroupBox();
@@ -64,12 +58,11 @@
             this.tabStage = new System.Windows.Forms.TabPage();
             this.stageSectionSplitContainer = new System.Windows.Forms.SplitContainer();
             this.splitContainer4 = new System.Windows.Forms.SplitContainer();
-            this.btnRemoveStagedFile = new System.Windows.Forms.Button();
-            this.button2 = new System.Windows.Forms.Button();
+            this.chkShowOnlyErrorMessages = new System.Windows.Forms.CheckBox();
             this.btnRunScripts = new System.Windows.Forms.Button();
-            this.button1 = new System.Windows.Forms.Button();
             this.chkRunIfError = new System.Windows.Forms.CheckBox();
-            this.lstStagedFiles = new System.Windows.Forms.ListBox();
+            this.stagedScriptFilesGridView = new System.Windows.Forms.DataGridView();
+            this.rtbExecutionSummaryMessage = new System.Windows.Forms.RichTextBox();
             this.scriptExecutorBGWorker = new System.ComponentModel.BackgroundWorker();
             this.menuStrip1 = new System.Windows.Forms.MenuStrip();
             this.fileToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
@@ -80,14 +73,21 @@
             this.runToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.runToolStripMenuItem1 = new System.Windows.Forms.ToolStripMenuItem();
             this.resultToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.executionResultSummaryToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.stageToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.moveDownToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.moveUpToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.deleteFileToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.statusStrip1 = new System.Windows.Forms.StatusStrip();
             this.statusBarText = new System.Windows.Forms.ToolStripStatusLabel();
             this.statusBarProgressBar = new System.Windows.Forms.ToolStripProgressBar();
             this.saveFileDialog1 = new System.Windows.Forms.SaveFileDialog();
             this.openFileDialog1 = new System.Windows.Forms.OpenFileDialog();
-            this.executionResultSummaryToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.chkShowOnlyErrorMessages = new System.Windows.Forms.CheckBox();
-            this.rtbExecutionSummaryMessage = new System.Windows.Forms.RichTextBox();
+            this.label5 = new System.Windows.Forms.Label();
+            this.cboDBServers = new System.Windows.Forms.ComboBox();
+            this.label6 = new System.Windows.Forms.Label();
+            this.cboDatabases = new System.Windows.Forms.ComboBox();
+            this.chkPromptOnDelete = new System.Windows.Forms.CheckBox();
             this.tabResults.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.splitContainer1)).BeginInit();
             this.splitContainer1.Panel1.SuspendLayout();
@@ -121,6 +121,7 @@
             this.splitContainer4.Panel1.SuspendLayout();
             this.splitContainer4.Panel2.SuspendLayout();
             this.splitContainer4.SuspendLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.stagedScriptFilesGridView)).BeginInit();
             this.menuStrip1.SuspendLayout();
             this.statusStrip1.SuspendLayout();
             this.SuspendLayout();
@@ -136,16 +137,6 @@
             this.btnFindFiles.UseVisualStyleBackColor = true;
             this.btnFindFiles.Click += new System.EventHandler(this.btnFindFiles_Click);
             // 
-            // label1
-            // 
-            this.label1.AutoSize = true;
-            this.label1.Location = new System.Drawing.Point(2, 61);
-            this.label1.Margin = new System.Windows.Forms.Padding(2, 0, 2, 0);
-            this.label1.Name = "label1";
-            this.label1.Size = new System.Drawing.Size(92, 13);
-            this.label1.TabIndex = 1;
-            this.label1.Text = "Connection string:";
-            // 
             // txtDBObjects
             // 
             this.txtDBObjects.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
@@ -156,7 +147,7 @@
             this.txtDBObjects.Multiline = true;
             this.txtDBObjects.Name = "txtDBObjects";
             this.txtDBObjects.ScrollBars = System.Windows.Forms.ScrollBars.Both;
-            this.txtDBObjects.Size = new System.Drawing.Size(247, 221);
+            this.txtDBObjects.Size = new System.Drawing.Size(247, 265);
             this.txtDBObjects.TabIndex = 3;
             // 
             // lblFolderName
@@ -264,7 +255,6 @@
             this.toolStripMenuItemOpenInEditor.Size = new System.Drawing.Size(182, 22);
             this.toolStripMenuItemOpenInEditor.Tag = "OpenSelectedFileMatchInEditor";
             this.toolStripMenuItemOpenInEditor.Text = "Open in editor";
-            this.toolStripMenuItemOpenInEditor.Click += new System.EventHandler(this.toolStripMenuItemOpenInEditor_Click);
             // 
             // toolStripMenuItemOpenInFileExplorer
             // 
@@ -301,6 +291,8 @@
             this.mainTabControl.ShowToolTips = true;
             this.mainTabControl.Size = new System.Drawing.Size(1026, 409);
             this.mainTabControl.TabIndex = 18;
+            this.mainTabControl.SelectedIndexChanged += new System.EventHandler(this.mainTabControl_SelectedIndexChanged);
+            this.mainTabControl.TabIndexChanged += new System.EventHandler(this.mainTabControl_TabIndexChanged);
             // 
             // tabSearch
             // 
@@ -330,19 +322,13 @@
             // 
             this.scAllContentHolder.Panel1.Controls.Add(this.cboScriptFolderPath);
             this.scAllContentHolder.Panel1.Controls.Add(this.lblFolderName);
-            this.scAllContentHolder.Panel1.Controls.Add(this.label6);
-            this.scAllContentHolder.Panel1.Controls.Add(this.label1);
-            this.scAllContentHolder.Panel1.Controls.Add(this.label5);
             this.scAllContentHolder.Panel1.Controls.Add(this.btnOpenFolderDialog);
-            this.scAllContentHolder.Panel1.Controls.Add(this.cboDBServers);
-            this.scAllContentHolder.Panel1.Controls.Add(this.cboDatabases);
-            this.scAllContentHolder.Panel1.Controls.Add(this.lblConnectionString);
             // 
             // scAllContentHolder.Panel2
             // 
             this.scAllContentHolder.Panel2.Controls.Add(this.splitContainer2);
             this.scAllContentHolder.Size = new System.Drawing.Size(1014, 379);
-            this.scAllContentHolder.SplitterDistance = 81;
+            this.scAllContentHolder.SplitterDistance = 37;
             this.scAllContentHolder.SplitterWidth = 8;
             this.scAllContentHolder.TabIndex = 24;
             // 
@@ -355,58 +341,6 @@
             this.cboScriptFolderPath.Size = new System.Drawing.Size(481, 21);
             this.cboScriptFolderPath.TabIndex = 23;
             this.cboScriptFolderPath.Leave += new System.EventHandler(this.cboScriptFolderPath_Leave);
-            // 
-            // label6
-            // 
-            this.label6.AutoSize = true;
-            this.label6.Location = new System.Drawing.Point(326, 36);
-            this.label6.Margin = new System.Windows.Forms.Padding(2, 0, 2, 0);
-            this.label6.Name = "label6";
-            this.label6.Size = new System.Drawing.Size(25, 13);
-            this.label6.TabIndex = 22;
-            this.label6.Text = "DB:";
-            // 
-            // label5
-            // 
-            this.label5.AutoSize = true;
-            this.label5.Location = new System.Drawing.Point(2, 36);
-            this.label5.Margin = new System.Windows.Forms.Padding(2, 0, 2, 0);
-            this.label5.Name = "label5";
-            this.label5.Size = new System.Drawing.Size(57, 13);
-            this.label5.TabIndex = 21;
-            this.label5.Text = "DB server:";
-            // 
-            // cboDBServers
-            // 
-            this.cboDBServers.FormattingEnabled = true;
-            this.cboDBServers.Location = new System.Drawing.Point(75, 32);
-            this.cboDBServers.Margin = new System.Windows.Forms.Padding(2);
-            this.cboDBServers.Name = "cboDBServers";
-            this.cboDBServers.Size = new System.Drawing.Size(246, 21);
-            this.cboDBServers.TabIndex = 20;
-            this.cboDBServers.Leave += new System.EventHandler(this.cboDBServers_Leave);
-            // 
-            // cboDatabases
-            // 
-            this.cboDatabases.FormattingEnabled = true;
-            this.cboDatabases.Location = new System.Drawing.Point(351, 32);
-            this.cboDatabases.Margin = new System.Windows.Forms.Padding(2);
-            this.cboDatabases.Name = "cboDatabases";
-            this.cboDatabases.Size = new System.Drawing.Size(230, 21);
-            this.cboDatabases.TabIndex = 18;
-            this.cboDatabases.Leave += new System.EventHandler(this.cboDatabases_Leave);
-            // 
-            // lblConnectionString
-            // 
-            this.lblConnectionString.AutoEllipsis = true;
-            this.lblConnectionString.AutoSize = true;
-            this.lblConnectionString.Location = new System.Drawing.Point(98, 61);
-            this.lblConnectionString.Margin = new System.Windows.Forms.Padding(2, 0, 2, 0);
-            this.lblConnectionString.Name = "lblConnectionString";
-            this.lblConnectionString.Size = new System.Drawing.Size(568, 13);
-            this.lblConnectionString.TabIndex = 19;
-            this.lblConnectionString.Text = "Integrated Security=SSPI;Persist Security Info=False;Initial Catalog=Billpay;Data" +
-    " Source=MMOIPY13DTV1.ipayxint.com";
             // 
             // splitContainer2
             // 
@@ -422,7 +356,7 @@
             // splitContainer2.Panel2
             // 
             this.splitContainer2.Panel2.Controls.Add(this.splitContainer3);
-            this.splitContainer2.Size = new System.Drawing.Size(1014, 290);
+            this.splitContainer2.Size = new System.Drawing.Size(1014, 334);
             this.splitContainer2.SplitterDistance = 265;
             this.splitContainer2.SplitterWidth = 8;
             this.splitContainer2.TabIndex = 23;
@@ -435,7 +369,7 @@
             this.panel1.Dock = System.Windows.Forms.DockStyle.Fill;
             this.panel1.Location = new System.Drawing.Point(0, 0);
             this.panel1.Name = "panel1";
-            this.panel1.Size = new System.Drawing.Size(265, 290);
+            this.panel1.Size = new System.Drawing.Size(265, 334);
             this.panel1.TabIndex = 0;
             // 
             // sqlFilePatternGroupBox
@@ -446,7 +380,7 @@
             this.sqlFilePatternGroupBox.Controls.Add(this.txtDBObjects);
             this.sqlFilePatternGroupBox.Location = new System.Drawing.Point(5, 36);
             this.sqlFilePatternGroupBox.Name = "sqlFilePatternGroupBox";
-            this.sqlFilePatternGroupBox.Size = new System.Drawing.Size(257, 244);
+            this.sqlFilePatternGroupBox.Size = new System.Drawing.Size(257, 288);
             this.sqlFilePatternGroupBox.TabIndex = 9;
             this.sqlFilePatternGroupBox.TabStop = false;
             this.sqlFilePatternGroupBox.Text = "SQL file pattern to search";
@@ -476,8 +410,8 @@
             // splitContainer3.Panel2
             // 
             this.splitContainer3.Panel2.Controls.Add(this.notFoundFilesGroupBox);
-            this.splitContainer3.Size = new System.Drawing.Size(741, 290);
-            this.splitContainer3.SplitterDistance = 181;
+            this.splitContainer3.Size = new System.Drawing.Size(741, 334);
+            this.splitContainer3.SplitterDistance = 208;
             this.splitContainer3.SplitterWidth = 5;
             this.splitContainer3.TabIndex = 0;
             // 
@@ -489,7 +423,7 @@
             this.foundFilesGroupBox.Controls.Add(this.lstFileMatches);
             this.foundFilesGroupBox.Location = new System.Drawing.Point(3, 3);
             this.foundFilesGroupBox.Name = "foundFilesGroupBox";
-            this.foundFilesGroupBox.Size = new System.Drawing.Size(725, 175);
+            this.foundFilesGroupBox.Size = new System.Drawing.Size(725, 202);
             this.foundFilesGroupBox.TabIndex = 8;
             this.foundFilesGroupBox.TabStop = false;
             this.foundFilesGroupBox.Text = "Files found";
@@ -506,7 +440,7 @@
             this.lstFileMatches.Location = new System.Drawing.Point(5, 14);
             this.lstFileMatches.Margin = new System.Windows.Forms.Padding(2);
             this.lstFileMatches.Name = "lstFileMatches";
-            this.lstFileMatches.Size = new System.Drawing.Size(715, 134);
+            this.lstFileMatches.Size = new System.Drawing.Size(715, 160);
             this.lstFileMatches.TabIndex = 7;
             this.lstFileMatches.DragDrop += new System.Windows.Forms.DragEventHandler(this.lstFileMatches_DragDrop);
             this.lstFileMatches.DragOver += new System.Windows.Forms.DragEventHandler(this.lstFileMatches_DragOver);
@@ -521,7 +455,7 @@
             this.notFoundFilesGroupBox.Controls.Add(this.lstFailures);
             this.notFoundFilesGroupBox.Location = new System.Drawing.Point(8, 14);
             this.notFoundFilesGroupBox.Name = "notFoundFilesGroupBox";
-            this.notFoundFilesGroupBox.Size = new System.Drawing.Size(720, 83);
+            this.notFoundFilesGroupBox.Size = new System.Drawing.Size(720, 96);
             this.notFoundFilesGroupBox.TabIndex = 9;
             this.notFoundFilesGroupBox.TabStop = false;
             this.notFoundFilesGroupBox.Text = "Files not found";
@@ -536,7 +470,7 @@
             this.lstFailures.Location = new System.Drawing.Point(5, 18);
             this.lstFailures.Margin = new System.Windows.Forms.Padding(2);
             this.lstFailures.Name = "lstFailures";
-            this.lstFailures.Size = new System.Drawing.Size(710, 56);
+            this.lstFailures.Size = new System.Drawing.Size(710, 82);
             this.lstFailures.TabIndex = 8;
             this.lstFailures.Click += new System.EventHandler(this.lstFailures_Click);
             // 
@@ -566,7 +500,7 @@
             // 
             this.stageSectionSplitContainer.Panel2.Controls.Add(this.rtbExecutionSummaryMessage);
             this.stageSectionSplitContainer.Size = new System.Drawing.Size(1012, 377);
-            this.stageSectionSplitContainer.SplitterDistance = 188;
+            this.stageSectionSplitContainer.SplitterDistance = 223;
             this.stageSectionSplitContainer.TabIndex = 17;
             // 
             // splitContainer4
@@ -577,44 +511,38 @@
             // 
             // splitContainer4.Panel1
             // 
+            this.splitContainer4.Panel1.Controls.Add(this.chkPromptOnDelete);
+            this.splitContainer4.Panel1.Controls.Add(this.cboDatabases);
+            this.splitContainer4.Panel1.Controls.Add(this.label6);
+            this.splitContainer4.Panel1.Controls.Add(this.cboDBServers);
+            this.splitContainer4.Panel1.Controls.Add(this.label5);
             this.splitContainer4.Panel1.Controls.Add(this.chkShowOnlyErrorMessages);
-            this.splitContainer4.Panel1.Controls.Add(this.btnRemoveStagedFile);
-            this.splitContainer4.Panel1.Controls.Add(this.button2);
             this.splitContainer4.Panel1.Controls.Add(this.btnRunScripts);
-            this.splitContainer4.Panel1.Controls.Add(this.button1);
             this.splitContainer4.Panel1.Controls.Add(this.chkRunIfError);
             // 
             // splitContainer4.Panel2
             // 
-            this.splitContainer4.Panel2.Controls.Add(this.lstStagedFiles);
-            this.splitContainer4.Size = new System.Drawing.Size(1012, 188);
-            this.splitContainer4.SplitterDistance = 139;
+            this.splitContainer4.Panel2.Controls.Add(this.stagedScriptFilesGridView);
+            this.splitContainer4.Size = new System.Drawing.Size(1012, 223);
+            this.splitContainer4.SplitterDistance = 163;
             this.splitContainer4.TabIndex = 16;
             // 
-            // btnRemoveStagedFile
+            // chkShowOnlyErrorMessages
             // 
-            this.btnRemoveStagedFile.Location = new System.Drawing.Point(18, 154);
-            this.btnRemoveStagedFile.Name = "btnRemoveStagedFile";
-            this.btnRemoveStagedFile.Size = new System.Drawing.Size(75, 23);
-            this.btnRemoveStagedFile.TabIndex = 16;
-            this.btnRemoveStagedFile.Text = "&Remove";
-            this.btnRemoveStagedFile.UseVisualStyleBackColor = true;
-            this.btnRemoveStagedFile.Click += new System.EventHandler(this.btnRemoveStagedFile_Click);
-            // 
-            // button2
-            // 
-            this.button2.Location = new System.Drawing.Point(18, 124);
-            this.button2.Name = "button2";
-            this.button2.Size = new System.Drawing.Size(75, 23);
-            this.button2.TabIndex = 3;
-            this.button2.Text = "Move &Down";
-            this.button2.UseVisualStyleBackColor = true;
-            this.button2.Visible = false;
+            this.chkShowOnlyErrorMessages.AutoSize = true;
+            this.chkShowOnlyErrorMessages.Location = new System.Drawing.Point(13, 167);
+            this.chkShowOnlyErrorMessages.Name = "chkShowOnlyErrorMessages";
+            this.chkShowOnlyErrorMessages.Size = new System.Drawing.Size(104, 17);
+            this.chkShowOnlyErrorMessages.TabIndex = 17;
+            this.chkShowOnlyErrorMessages.Text = "Show only errors";
+            this.chkShowOnlyErrorMessages.UseVisualStyleBackColor = true;
+            this.chkShowOnlyErrorMessages.Visible = false;
+            this.chkShowOnlyErrorMessages.CheckedChanged += new System.EventHandler(this.chkShowOnlyErrorMessages_CheckedChanged);
             // 
             // btnRunScripts
             // 
             this.btnRunScripts.Enabled = false;
-            this.btnRunScripts.Location = new System.Drawing.Point(18, 12);
+            this.btnRunScripts.Location = new System.Drawing.Point(13, 99);
             this.btnRunScripts.Margin = new System.Windows.Forms.Padding(2);
             this.btnRunScripts.Name = "btnRunScripts";
             this.btnRunScripts.Size = new System.Drawing.Size(75, 19);
@@ -623,43 +551,47 @@
             this.btnRunScripts.UseVisualStyleBackColor = true;
             this.btnRunScripts.Click += new System.EventHandler(this.btnRunScripts_Click_1);
             // 
-            // button1
-            // 
-            this.button1.Location = new System.Drawing.Point(18, 95);
-            this.button1.Name = "button1";
-            this.button1.Size = new System.Drawing.Size(75, 23);
-            this.button1.TabIndex = 2;
-            this.button1.Text = "Move &Up";
-            this.button1.UseVisualStyleBackColor = true;
-            this.button1.Visible = false;
-            this.button1.Click += new System.EventHandler(this.button1_Click_1);
-            // 
             // chkRunIfError
             // 
-            this.chkRunIfError.Location = new System.Drawing.Point(18, 35);
+            this.chkRunIfError.AutoSize = true;
+            this.chkRunIfError.Location = new System.Drawing.Point(13, 122);
             this.chkRunIfError.Margin = new System.Windows.Forms.Padding(2);
             this.chkRunIfError.Name = "chkRunIfError";
-            this.chkRunIfError.Size = new System.Drawing.Size(119, 55);
+            this.chkRunIfError.Size = new System.Drawing.Size(151, 17);
             this.chkRunIfError.TabIndex = 15;
             this.chkRunIfError.Text = "Run even if one script fails";
             this.chkRunIfError.TextAlign = System.Drawing.ContentAlignment.TopLeft;
             this.chkRunIfError.UseVisualStyleBackColor = true;
             // 
-            // lstStagedFiles
+            // stagedScriptFilesGridView
             // 
-            this.lstStagedFiles.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
+            this.stagedScriptFilesGridView.AllowDrop = true;
+            this.stagedScriptFilesGridView.AllowUserToAddRows = false;
+            this.stagedScriptFilesGridView.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
             | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
-            this.lstStagedFiles.ContextMenuStrip = this.contextMenuStrip1;
-            this.lstStagedFiles.FormattingEnabled = true;
-            this.lstStagedFiles.Location = new System.Drawing.Point(0, 0);
-            this.lstStagedFiles.Name = "lstStagedFiles";
-            this.lstStagedFiles.Size = new System.Drawing.Size(869, 186);
-            this.lstStagedFiles.TabIndex = 1;
-            this.lstStagedFiles.DragDrop += new System.Windows.Forms.DragEventHandler(this.lstStagedFiles_DragDrop);
-            this.lstStagedFiles.DragOver += new System.Windows.Forms.DragEventHandler(this.lstStagedFiles_DragOver);
-            this.lstStagedFiles.KeyUp += new System.Windows.Forms.KeyEventHandler(this.lstStagedFiles_KeyUp);
-            this.lstStagedFiles.MouseDown += new System.Windows.Forms.MouseEventHandler(this.lstStagedFiles_MouseDown);
+            this.stagedScriptFilesGridView.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize;
+            this.stagedScriptFilesGridView.ContextMenuStrip = this.contextMenuStrip1;
+            this.stagedScriptFilesGridView.Location = new System.Drawing.Point(0, 0);
+            this.stagedScriptFilesGridView.MultiSelect = false;
+            this.stagedScriptFilesGridView.Name = "stagedScriptFilesGridView";
+            this.stagedScriptFilesGridView.SelectionMode = System.Windows.Forms.DataGridViewSelectionMode.FullRowSelect;
+            this.stagedScriptFilesGridView.Size = new System.Drawing.Size(845, 223);
+            this.stagedScriptFilesGridView.TabIndex = 2;
+            this.stagedScriptFilesGridView.CellContentClick += new System.Windows.Forms.DataGridViewCellEventHandler(this.dataGridView1_CellContentClick);
+            this.stagedScriptFilesGridView.DragDrop += new System.Windows.Forms.DragEventHandler(this.dataGridView1_DragDrop);
+            this.stagedScriptFilesGridView.DragOver += new System.Windows.Forms.DragEventHandler(this.dataGridView1_DragOver);
+            this.stagedScriptFilesGridView.MouseDown += new System.Windows.Forms.MouseEventHandler(this.dataGridView1_MouseDown);
+            this.stagedScriptFilesGridView.MouseUp += new System.Windows.Forms.MouseEventHandler(this.dataGridView1_MouseUp);
+            // 
+            // rtbExecutionSummaryMessage
+            // 
+            this.rtbExecutionSummaryMessage.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.rtbExecutionSummaryMessage.Location = new System.Drawing.Point(0, 0);
+            this.rtbExecutionSummaryMessage.Name = "rtbExecutionSummaryMessage";
+            this.rtbExecutionSummaryMessage.Size = new System.Drawing.Size(1012, 150);
+            this.rtbExecutionSummaryMessage.TabIndex = 18;
+            this.rtbExecutionSummaryMessage.Text = "";
             // 
             // scriptExecutorBGWorker
             // 
@@ -674,7 +606,8 @@
             this.menuStrip1.ImageScalingSize = new System.Drawing.Size(20, 20);
             this.menuStrip1.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.fileToolStripMenuItem,
-            this.runToolStripMenuItem});
+            this.runToolStripMenuItem,
+            this.stageToolStripMenuItem});
             this.menuStrip1.Location = new System.Drawing.Point(0, 0);
             this.menuStrip1.Name = "menuStrip1";
             this.menuStrip1.Size = new System.Drawing.Size(1028, 24);
@@ -751,6 +684,49 @@
             this.resultToolStripMenuItem.Text = "Execution r&esult";
             this.resultToolStripMenuItem.Click += new System.EventHandler(this.resultToolStripMenuItem_Click);
             // 
+            // executionResultSummaryToolStripMenuItem
+            // 
+            this.executionResultSummaryToolStripMenuItem.Name = "executionResultSummaryToolStripMenuItem";
+            this.executionResultSummaryToolStripMenuItem.ShortcutKeys = ((System.Windows.Forms.Keys)((System.Windows.Forms.Keys.Control | System.Windows.Forms.Keys.R)));
+            this.executionResultSummaryToolStripMenuItem.Size = new System.Drawing.Size(236, 22);
+            this.executionResultSummaryToolStripMenuItem.Text = "To&ggle result summary";
+            this.executionResultSummaryToolStripMenuItem.Click += new System.EventHandler(this.executionResultSummaryToolStripMenuItem_Click);
+            // 
+            // stageToolStripMenuItem
+            // 
+            this.stageToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.moveDownToolStripMenuItem,
+            this.moveUpToolStripMenuItem,
+            this.deleteFileToolStripMenuItem});
+            this.stageToolStripMenuItem.Name = "stageToolStripMenuItem";
+            this.stageToolStripMenuItem.Size = new System.Drawing.Size(48, 20);
+            this.stageToolStripMenuItem.Text = "Stage";
+            this.stageToolStripMenuItem.Visible = false;
+            // 
+            // moveDownToolStripMenuItem
+            // 
+            this.moveDownToolStripMenuItem.Name = "moveDownToolStripMenuItem";
+            this.moveDownToolStripMenuItem.ShortcutKeys = ((System.Windows.Forms.Keys)((System.Windows.Forms.Keys.Alt | System.Windows.Forms.Keys.Down)));
+            this.moveDownToolStripMenuItem.Size = new System.Drawing.Size(217, 22);
+            this.moveDownToolStripMenuItem.Text = "Move file &down";
+            this.moveDownToolStripMenuItem.Click += new System.EventHandler(this.moveDownToolStripMenuItem_Click);
+            // 
+            // moveUpToolStripMenuItem
+            // 
+            this.moveUpToolStripMenuItem.Name = "moveUpToolStripMenuItem";
+            this.moveUpToolStripMenuItem.ShortcutKeys = ((System.Windows.Forms.Keys)((System.Windows.Forms.Keys.Alt | System.Windows.Forms.Keys.Up)));
+            this.moveUpToolStripMenuItem.Size = new System.Drawing.Size(217, 22);
+            this.moveUpToolStripMenuItem.Text = "Move file &Up";
+            this.moveUpToolStripMenuItem.Click += new System.EventHandler(this.moveUpToolStripMenuItem_Click);
+            // 
+            // deleteFileToolStripMenuItem
+            // 
+            this.deleteFileToolStripMenuItem.Name = "deleteFileToolStripMenuItem";
+            this.deleteFileToolStripMenuItem.ShortcutKeys = System.Windows.Forms.Keys.Delete;
+            this.deleteFileToolStripMenuItem.Size = new System.Drawing.Size(217, 22);
+            this.deleteFileToolStripMenuItem.Text = "Unstage file";
+            this.deleteFileToolStripMenuItem.Click += new System.EventHandler(this.deleteFileToolStripMenuItem_Click);
+            // 
             // statusStrip1
             // 
             this.statusStrip1.ImageScalingSize = new System.Drawing.Size(20, 20);
@@ -785,34 +761,57 @@
             this.openFileDialog1.Filter = "Only SQL db projects(*.sdbproj)|*.sdbproj";
             this.openFileDialog1.Title = "Open SQL DB deployment project";
             // 
-            // executionResultSummaryToolStripMenuItem
+            // label5
             // 
-            this.executionResultSummaryToolStripMenuItem.Name = "executionResultSummaryToolStripMenuItem";
-            this.executionResultSummaryToolStripMenuItem.ShortcutKeys = ((System.Windows.Forms.Keys)((System.Windows.Forms.Keys.Control | System.Windows.Forms.Keys.R)));
-            this.executionResultSummaryToolStripMenuItem.Size = new System.Drawing.Size(236, 22);
-            this.executionResultSummaryToolStripMenuItem.Text = "To&ggle result summary";
-            this.executionResultSummaryToolStripMenuItem.Click += new System.EventHandler(this.executionResultSummaryToolStripMenuItem_Click);
+            this.label5.AutoSize = true;
+            this.label5.Location = new System.Drawing.Point(10, 12);
+            this.label5.Margin = new System.Windows.Forms.Padding(2, 0, 2, 0);
+            this.label5.Name = "label5";
+            this.label5.Size = new System.Drawing.Size(57, 13);
+            this.label5.TabIndex = 22;
+            this.label5.Text = "DB server:";
             // 
-            // chkShowOnlyErrorMessages
+            // cboDBServers
             // 
-            this.chkShowOnlyErrorMessages.AutoSize = true;
-            this.chkShowOnlyErrorMessages.Location = new System.Drawing.Point(18, 72);
-            this.chkShowOnlyErrorMessages.Name = "chkShowOnlyErrorMessages";
-            this.chkShowOnlyErrorMessages.Size = new System.Drawing.Size(104, 17);
-            this.chkShowOnlyErrorMessages.TabIndex = 17;
-            this.chkShowOnlyErrorMessages.Text = "Show only errors";
-            this.chkShowOnlyErrorMessages.UseVisualStyleBackColor = true;
-            this.chkShowOnlyErrorMessages.Visible = false;
-            this.chkShowOnlyErrorMessages.CheckedChanged += new System.EventHandler(this.chkShowOnlyErrorMessages_CheckedChanged);
+            this.cboDBServers.FormattingEnabled = true;
+            this.cboDBServers.Location = new System.Drawing.Point(13, 27);
+            this.cboDBServers.Margin = new System.Windows.Forms.Padding(2);
+            this.cboDBServers.Name = "cboDBServers";
+            this.cboDBServers.Size = new System.Drawing.Size(119, 21);
+            this.cboDBServers.TabIndex = 23;
+            this.cboDBServers.Leave += new System.EventHandler(this.cboDBServers_Leave);
             // 
-            // rtbExecutionSummaryMessage
+            // label6
             // 
-            this.rtbExecutionSummaryMessage.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.rtbExecutionSummaryMessage.Location = new System.Drawing.Point(0, 0);
-            this.rtbExecutionSummaryMessage.Name = "rtbExecutionSummaryMessage";
-            this.rtbExecutionSummaryMessage.Size = new System.Drawing.Size(1012, 185);
-            this.rtbExecutionSummaryMessage.TabIndex = 18;
-            this.rtbExecutionSummaryMessage.Text = "";
+            this.label6.AutoSize = true;
+            this.label6.Location = new System.Drawing.Point(10, 50);
+            this.label6.Margin = new System.Windows.Forms.Padding(2, 0, 2, 0);
+            this.label6.Name = "label6";
+            this.label6.Size = new System.Drawing.Size(25, 13);
+            this.label6.TabIndex = 24;
+            this.label6.Text = "DB:";
+            // 
+            // cboDatabases
+            // 
+            this.cboDatabases.FormattingEnabled = true;
+            this.cboDatabases.Location = new System.Drawing.Point(13, 74);
+            this.cboDatabases.Margin = new System.Windows.Forms.Padding(2);
+            this.cboDatabases.Name = "cboDatabases";
+            this.cboDatabases.Size = new System.Drawing.Size(119, 21);
+            this.cboDatabases.TabIndex = 25;
+            this.cboDatabases.Leave += new System.EventHandler(this.cboDatabases_Leave);
+            // 
+            // chkPromptOnDelete
+            // 
+            this.chkPromptOnDelete.AutoSize = true;
+            this.chkPromptOnDelete.Checked = true;
+            this.chkPromptOnDelete.CheckState = System.Windows.Forms.CheckState.Checked;
+            this.chkPromptOnDelete.Location = new System.Drawing.Point(13, 144);
+            this.chkPromptOnDelete.Name = "chkPromptOnDelete";
+            this.chkPromptOnDelete.Size = new System.Drawing.Size(106, 17);
+            this.chkPromptOnDelete.TabIndex = 26;
+            this.chkPromptOnDelete.Text = "Prompt on delete";
+            this.chkPromptOnDelete.UseVisualStyleBackColor = true;
             // 
             // DBScriptRunner
             // 
@@ -865,6 +864,7 @@
             this.splitContainer4.Panel2.ResumeLayout(false);
             ((System.ComponentModel.ISupportInitialize)(this.splitContainer4)).EndInit();
             this.splitContainer4.ResumeLayout(false);
+            ((System.ComponentModel.ISupportInitialize)(this.stagedScriptFilesGridView)).EndInit();
             this.menuStrip1.ResumeLayout(false);
             this.menuStrip1.PerformLayout();
             this.statusStrip1.ResumeLayout(false);
@@ -877,7 +877,6 @@
         #endregion
 
         private System.Windows.Forms.Button btnFindFiles;
-        private System.Windows.Forms.Label label1;
         private System.Windows.Forms.TextBox txtDBObjects;
         private System.Windows.Forms.Label lblFolderName;
         private System.Windows.Forms.Label label2;
@@ -888,11 +887,6 @@
         private System.Windows.Forms.TabPage tabSearch;
         private System.Windows.Forms.SplitContainer splitContainer1;
         private System.Windows.Forms.ListBox lstExecutionFailures;
-        private System.Windows.Forms.ComboBox cboDatabases;
-        private System.Windows.Forms.Label lblConnectionString;
-        private System.Windows.Forms.ComboBox cboDBServers;
-        private System.Windows.Forms.Label label6;
-        private System.Windows.Forms.Label label5;
         private System.Windows.Forms.SplitContainer splitContainer2;
         private System.Windows.Forms.SplitContainer scAllContentHolder;
         private System.Windows.Forms.Panel panel1;
@@ -906,9 +900,6 @@
         private System.Windows.Forms.CheckBox chkRunIfError;
         private System.Windows.Forms.Button btnStageFiles;
         private System.ComponentModel.BackgroundWorker scriptExecutorBGWorker;
-        private System.Windows.Forms.ListBox lstStagedFiles;
-        private System.Windows.Forms.Button button2;
-        private System.Windows.Forms.Button button1;
         private System.Windows.Forms.ListBox lstExecutionResult;
         private System.Windows.Forms.SplitContainer stageSectionSplitContainer;
         private System.Windows.Forms.MenuStrip menuStrip1;
@@ -922,7 +913,6 @@
         private System.Windows.Forms.SaveFileDialog saveFileDialog1;
         private System.Windows.Forms.OpenFileDialog openFileDialog1;
         private System.Windows.Forms.ToolStripMenuItem closeExitToolStripMenuItem;
-        private System.Windows.Forms.Button btnRemoveStagedFile;
         private System.Windows.Forms.GroupBox foundFilesGroupBox;
         private System.Windows.Forms.GroupBox notFoundFilesGroupBox;
         private System.Windows.Forms.GroupBox sqlFilePatternGroupBox;
@@ -935,6 +925,18 @@
         private System.Windows.Forms.ToolStripMenuItem executionResultSummaryToolStripMenuItem;
         private System.Windows.Forms.CheckBox chkShowOnlyErrorMessages;
         private System.Windows.Forms.RichTextBox rtbExecutionSummaryMessage;
+        private System.Windows.Forms.DataGridViewTextBoxColumn fileNoDataGridViewTextBoxColumn;
+        private System.Windows.Forms.DataGridViewTextBoxColumn filePathDataGridViewTextBoxColumn;
+        private System.Windows.Forms.ToolStripMenuItem stageToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem moveDownToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem moveUpToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem deleteFileToolStripMenuItem;
+        private System.Windows.Forms.DataGridView stagedScriptFilesGridView;
+        private System.Windows.Forms.ComboBox cboDatabases;
+        private System.Windows.Forms.Label label6;
+        private System.Windows.Forms.ComboBox cboDBServers;
+        private System.Windows.Forms.Label label5;
+        private System.Windows.Forms.CheckBox chkPromptOnDelete;
     }
 }
 
